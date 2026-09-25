@@ -112,9 +112,27 @@ def sync_symbol_timeframe(symbol: str, tf_label: str, interval: str, min_candles
         save_history(symbol, tf_label, fresh)
         return fresh
 
+    interval_ms = INTERVAL_MS.get(interval, 60_000)
+
+    # Backward backfill: if we already have SOME history but it's shallower
+    # than min_candles requires (e.g. old deploy only cached ~200 bars,
+    # then we raised LIVE_WARMUP_DAYS to 20), extend it further back in
+    # time instead of only ever appending new bars forward.
+    if len(existing) < int(min_candles):
+        earliest_ts = existing.index.min()
+        earliest_ms = int(earliest_ts.value // 1_000_000)
+        target_start_ms = now_ms - int(min_candles) * interval_ms
+        if target_start_ms < earliest_ms:
+            older = bybit_client.fetch_klines_range(
+                symbol, interval, start_time_ms=target_start_ms, end_time_ms=earliest_ms - 1
+            )
+            if not older.empty:
+                existing = pd.concat([older, existing]).sort_index()
+                existing = existing[~existing.index.duplicated(keep="last")]
+                save_history(symbol, tf_label, existing)
+
     last_ts = existing.index.max()
     last_ms = int(last_ts.value // 1_000_000)
-    interval_ms = INTERVAL_MS.get(interval, 60_000)
 
     if now_ms - last_ms > interval_ms:
         gap = bybit_client.fetch_klines_range(symbol, interval, start_time_ms=last_ms + 1, end_time_ms=now_ms)
