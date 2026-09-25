@@ -585,7 +585,7 @@ def run_forever():
                     # on the underlying price data.
                     df_1m = data_store.sync_symbol_timeframe(
                         symbol, "1m", config.TIMEFRAMES["1m"],
-                        min_candles=max(config.CANDLES_PER_TIMEFRAME * 8, 500),
+                        min_candles=config.LIVE_WARMUP_DAYS * 1440,
                     )
                     if df_1m.empty:
                         continue

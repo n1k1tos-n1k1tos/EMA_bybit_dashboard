@@ -102,6 +102,7 @@ STRATEGY_CONFIRM_TF_LABEL = "8m"
 STRATEGY_CANDLE_MODE = "heikin_ashi"
 
 CANDLES_PER_TIMEFRAME = 50  # how many candles the chart keeps/shows per symbol/timeframe
+LIVE_WARMUP_DAYS = 20  # 1m history depth loaded on startup so EMA(133) on 4m/7m/8m is fully warmed before signals run
 
 # Fixed 100-hour lookback window shown on the chart, expressed as bar counts
 # per timeframe so 1m/5m/1h all cover the exact same wall-clock span. Also
