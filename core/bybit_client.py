@@ -29,11 +29,23 @@ def fetch_klines(symbol: str, interval: str, limit: int = 200, end_time_ms: int 
     if end_time_ms is not None:
         params["end"] = int(end_time_ms)
 
-    resp = requests.get(url, params=params, timeout=15)
-    resp.raise_for_status()
-    payload = resp.json()
+    max_retries = 6
+    backoff = 1.0
+    payload = None
+    for attempt in range(max_retries):
+        resp = requests.get(url, params=params, timeout=15)
+        resp.raise_for_status()
+        payload = resp.json()
 
-    if payload.get("retCode") != 0:
+        if payload.get("retCode") == 0:
+            break
+
+        ret_msg = str(payload.get("retMsg", "")).lower()
+        if "rate limit" in ret_msg and attempt < max_retries - 1:
+            time.sleep(backoff)
+            backoff *= 2
+            continue
+
         raise RuntimeError(f"Bybit error for {symbol} {interval}: {payload.get('retMsg')}")
 
     rows = payload["result"]["list"]
@@ -71,7 +83,7 @@ def fetch_klines_range(symbol: str, interval: str, start_time_ms: int, end_time_
             break
 
         cursor_end = earliest - 1
-        time.sleep(0.15)  # be gentle with the public rate limit
+        time.sleep(0.5)  # be gentle with the public rate limit -- raised from 0.15s after hitting Bybit rate limit during 20-day cold-start backfill
 
     if not all_frames:
         return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])

@@ -98,7 +98,17 @@ def sync_symbol_timeframe(symbol: str, tf_label: str, interval: str, min_candles
     now_ms = int(now.value // 1_000_000)
 
     if existing.empty:
-        fresh = bybit_client.fetch_klines(symbol, interval, limit=max(int(min_candles), 200))
+        if int(min_candles) > 1000:
+            # Cold start needing deep history (e.g. 20-day live warmup) --
+            # a single fetch_klines call is capped at 1000 candles, so we
+            # must paginate backward in chunks via fetch_klines_range.
+            interval_ms = INTERVAL_MS.get(interval, 60_000)
+            start_time_ms = now_ms - int(min_candles) * interval_ms
+            fresh = bybit_client.fetch_klines_range(
+                symbol, interval, start_time_ms=start_time_ms, end_time_ms=now_ms
+            )
+        else:
+            fresh = bybit_client.fetch_klines(symbol, interval, limit=max(int(min_candles), 200))
         save_history(symbol, tf_label, fresh)
         return fresh
 
