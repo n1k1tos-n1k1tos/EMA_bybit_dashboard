@@ -123,13 +123,24 @@ def sync_symbol_timeframe(symbol: str, tf_label: str, interval: str, min_candles
         earliest_ms = int(earliest_ts.value // 1_000_000)
         target_start_ms = now_ms - int(min_candles) * interval_ms
         if target_start_ms < earliest_ms:
-            older = bybit_client.fetch_klines_range(
-                symbol, interval, start_time_ms=target_start_ms, end_time_ms=earliest_ms - 1
-            )
-            if not older.empty:
-                existing = pd.concat([older, existing]).sort_index()
-                existing = existing[~existing.index.duplicated(keep="last")]
-                save_history(symbol, tf_label, existing)
+            print(f"[backward-backfill] {symbol} {tf_label}: have {len(existing)}/{min_candles}, "
+                  f"fetching from {pd.to_datetime(target_start_ms, unit='ms', utc=True)} "
+                  f"to {pd.to_datetime(earliest_ms - 1, unit='ms', utc=True)}...", flush=True)
+            try:
+                older = bybit_client.fetch_klines_range(
+                    symbol, interval, start_time_ms=target_start_ms, end_time_ms=earliest_ms - 1
+                )
+                print(f"[backward-backfill] {symbol} {tf_label}: fetched {len(older)} older bars", flush=True)
+                if not older.empty:
+                    existing = pd.concat([older, existing]).sort_index()
+                    existing = existing[~existing.index.duplicated(keep="last")]
+                    save_history(symbol, tf_label, existing)
+                    print(f"[backward-backfill] {symbol} {tf_label}: saved, now {len(existing)} bars total", flush=True)
+            except Exception as exc:
+                print(f"[backward-backfill] {symbol} {tf_label}: FAILED with {type(exc).__name__}: {exc}", flush=True)
+        else:
+            print(f"[backward-backfill] {symbol} {tf_label}: have {len(existing)}/{min_candles} but "
+                  f"target_start_ms >= earliest_ms already, nothing to backfill (gap-fill only)", flush=True)
 
     last_ts = existing.index.max()
     last_ms = int(last_ts.value // 1_000_000)
