@@ -78,6 +78,12 @@ def load_history(symbol: str, tf_label: str) -> pd.DataFrame:
 def save_history(symbol: str, tf_label: str, df: pd.DataFrame) -> None:
     if tf_label in RESAMPLED_FROM_1M:
         return
+
+    if tf_label == "1m" and not df.empty:
+        max_1m_rows = int(config.LIVE_WARMUP_DAYS * 1440) + 2000
+        if len(df) > max_1m_rows:
+            df = df.tail(max_1m_rows).copy()
+
     path = _csv_path(symbol, tf_label)
     df.to_csv(path)
 
