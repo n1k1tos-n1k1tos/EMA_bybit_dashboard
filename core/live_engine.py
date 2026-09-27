@@ -468,7 +468,7 @@ def _try_open_new_positions(params: dict, signals: dict, latest_close: dict):
     max_open = int(params["max_open_positions"])
     window = pd.Timedelta(minutes=config.DEDUP_WINDOW_MIN)
 
-    ordered = sorted(signals.items(), key=lambda kv: kv[1][0] if kv[1][0] is not None else pd.Timestamp.min)
+    ordered = sorted(signals.items(), key=lambda kv: kv[1][0] if kv[1][0] is not None else pd.Timestamp.min.tz_localize("UTC"))
 
     for (symbol, strategy_name), (ts, direction, price, tp_pct, sl_pct) in ordered:
         if direction is None:
