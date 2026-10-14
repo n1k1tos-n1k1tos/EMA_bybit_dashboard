@@ -1,0 +1,11 @@
+{
+  "closed_trades": 0,
+  "wins": 0,
+  "losses": 0,
+  "winrate_pct": 0.0,
+  "net_pnl_usdt": 0.0,
+  "return_pct": 0.0,
+  "profit_factor": 0.0,
+  "max_drawdown_pct": 0.0,
+  "final_equity": 10000.0
+}

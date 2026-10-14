@@ -1,0 +1,12 @@
+=== A vs B, 30d, BTCUSDT ===
+
+metric                A_confirmed   B_no_confirm
+raw_signals                    16            656
+kept_signals                   16            471
+n_trades                       15            355
+wins                           12            190
+losses                          3            165
+winrate                     80.00          53.52
+net_pnl                   1500.00       -1175.00
+pf                          3.143          0.969
+max_dd                       4.52          28.95

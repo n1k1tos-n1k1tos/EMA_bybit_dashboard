@@ -174,7 +174,7 @@ DEFAULT_REBATE_PCT = 70.0      # percent of fees rebated
 # ---------------------------------------------------------------------------
 # Bybit public API (no keys required for market data)
 # ---------------------------------------------------------------------------
-BYBIT_BASE_URL = os.environ.get("BYBIT_BASE_URL", "https://api.bytick.com")
+BYBIT_BASE_URL = os.environ.get("BYBIT_BASE_URL", "https://api.bybit.com")
 BYBIT_CATEGORY = "linear"  # USDT perpetuals
 
 # ---------------------------------------------------------------------------
